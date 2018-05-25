@@ -18,6 +18,6 @@ czFILE* cz_open(char* filename, char mode);
 void cz_ls();
 int cz_mv(char* orig, char *dest);
 int cz_rm(char* filename);
-/*int cz_cp(char* orig, char *dest);*/
+int cz_cp(char* orig, char *dest);
 
 #endif

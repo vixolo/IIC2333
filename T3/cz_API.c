@@ -13,8 +13,7 @@ int cz_exists(char* filename){ //Search for the filename and tell if it's there
   FILE * disco = fopen("simdiskfilled.bin", "r");
   int max_file_storage = 64;
   for (int i = 0; i < max_file_storage; i++) {
-    int pos = 0+16*i;
-    fseek(disco, pos, SEEK_SET);
+    fseek(disco, 0+16*i, SEEK_SET);
     char validity[1];
     fread(validity, 1, 1, disco);
     if(validity[0]=='\x00'){
@@ -80,7 +79,7 @@ int get_available_block_from_byte(char byte){
 int get_next_available_block(){
   FILE * disco = fopen("simdiskfilled.bin", "r");
   fseek(disco, 1024, SEEK_SET);
-  char * eight_blocks;
+  char eight_blocks[1];
   for (int byte = 0; byte < 1024*8; byte++) {
     fread(eight_blocks, 1, 1, disco);
     if (*eight_blocks != '\xFF'){
@@ -88,7 +87,7 @@ int get_next_available_block(){
       return (byte)*8+bit;
     }
   }
-  return -1;
+  return 42;
 }
 
 int get_next_dir_number(){
@@ -96,7 +95,7 @@ int get_next_dir_number(){
   int max_file_storage = 64;
   for (int index = 0; index < max_file_storage; index++) {
     fseek(disco, 16*index, SEEK_SET);
-    char * validity;
+    char validity[1];
     fread(validity, 1, 1, disco);
     if(*validity=='\x00'){
       return index;
@@ -109,7 +108,7 @@ czFILE* cz_open(char* filename, char mode){
 
   czFILE * open_file;
   strcpy(open_file->name, filename);
-  printf("%i\n", sizeof(char*));
+  printf("%lu\n", sizeof(char*));
   sleep(4);
   //open_file->modo = mode;
   /*
@@ -182,12 +181,11 @@ czFILE* cz_open(char* filename, char mode){
 }
 
 void cz_ls(){
-
   FILE * disco = fopen("simdiskfilled.bin", "r");
   int max_file_storage = 64;
   for (int i = 0; i < max_file_storage; i++) {
     fseek(disco, 0+16*i, SEEK_SET);
-    char * validity;
+    char validity[1];
     fread(validity, 1, 1, disco);
     if(validity[0]=='\x01'){
       char name[12];
@@ -195,28 +193,25 @@ void cz_ls(){
       printf("%s\n", name);
     }
   }
-
   fclose(disco);
   return;
 }
 
 int cz_mv(char* orig, char *dest){
-  czFILE* open_file;
-  strcpy(open_file->name, orig);
   if(!cz_exists(orig) || cz_exists(dest)){
     return 1;
   }
   FILE * disco = fopen("simdiskfilled.bin", "r+");
   int max_file_storage = 64;
-  int index = 0;
   for (int i = 0; i < max_file_storage; i++) {
     fseek(disco, 16*i, SEEK_SET);
-    char * validity;
+    char validity[1];
     fread(validity, 1, 1, disco);
-    if(*validity=='\x01'){
-      char * name;
+    if(validity[0]=='\x01'){
+      char name[12];
+      name[11] = '\x00';
       fread(name, 1, 11, disco);
-      if(strcmp(name, orig)){
+      if(!strcmp(name, orig)){
           fseek(disco, 16*i+1, SEEK_SET);
           fwrite(dest, 1, 11, disco);
         break;
@@ -228,57 +223,42 @@ int cz_mv(char* orig, char *dest){
 }
 
 int cz_rm(char* filename){
-  czFILE* open_file;
-  strcpy(open_file->name, filename);
   if(!cz_exists(filename)){
     return 1;
   }
   FILE * disco = fopen("simdiskfilled.bin", "r+");
   int max_file_storage = 64;
-  int index = 0;
+  char pointer[4];
   for (int i = 0; i < max_file_storage; i++) {
     fseek(disco, 16*i, SEEK_SET);
-    char * validity;
+    char validity[1];
     fread(validity, 1, 1, disco);
-    if(*validity=='\x01'){
-      char * name;
+    if(validity[0]=='\x01'){
+      char name[12];
+      name [11] = '\x00';
       fread(name, 1, 11, disco);
       if(!strcmp(name, filename)){
           fseek(disco, 16*i, SEEK_SET);
           validity[0] = '\x00';
           fwrite(validity, 1, 1, disco);
-        break;
+          fseek(disco, 16*i+12, SEEK_SET);
+          fread(pointer, 1, 4, disco);
+          break;
       }
     }
   }
+  // Nos paramos en el bloque indice
+  fseek(disco, pointer, SEEK_SET);
   fclose(disco);
   return 0;
 }
 
-/*
 int cz_cp(char* orig, char *dest){
-  czFILE* open_file;
-  strcpy(open_file->name, orig);
-  if(!cz_exists(orig) || cz_exists(dest)){
+  int bloque_disponible = get_next_dir_number();
+  if(!cz_exists(orig) || cz_exists(dest) || bloque_disponible == -1){
     return 1;
   }
-  FILE * disco = fopen("simdiskfilled.bin", "r+");
-  int max_file_storage = 64;
-  int index = 0;
-  bool space = 0;
-  for (int i = 0; i < max_file_storage; i++) {
-    fseek(disco, 16*i, SEEK_SET);
-    char * validity;
-    fread(validity, 1, 1, disco);
-    if(*validity=='\x01'){
-      space = true;
-      break;
-    }
-  }
-  if(!space){
-    fclose(disco);
-    return 1;
-  }
+  /*
   char * size;
   char * created_at;
   char * modified_at;
@@ -308,8 +288,8 @@ int cz_cp(char* orig, char *dest){
   Luego hay que escribir y marcar el directorio como usado
   eso falta. No estoy seguro si habia que veriicar que hubiesen dos espacios disponibles
   en disco para asi meter el bloque de direccionamiento indirecto.
+fclose(disco);
+*/
 
-  fclose(disco);
   return 0;
 }
-*/
