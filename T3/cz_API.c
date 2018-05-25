@@ -247,8 +247,27 @@ int cz_rm(char* filename){
       }
     }
   }
-  // Nos paramos en el bloque indice
-  fseek(disco, pointer, SEEK_SET);
+  fseek(disco, (int)pointer, SEEK_SET); // Nos paramos en el bloque indice
+  paint_bitmap(disco, (int)pointer); //libero el bloque indice
+  char size[4];
+  fseek(disco, (int)pointer, SEEK_SET);
+  fread(size, 1, 4, disco);
+  fseek(disco, (int)pointer+8, SEEK_SET);
+  for (int i = 0; (i < 253 && i < size); ++i){
+    fseek(disco, 4, SEEK_CUR);
+    fread(pointer, 1, 4, disco); //guardo el siguiente bloque a liberar en el bitmap
+    paint_bitmap(disco, (int)pointer);   // lo libero
+    } 
+  if (size > 252){
+    fseek(disco, 4, SEEK_CUR);
+    fread(pointer, 1, 4, disco); //guardo el puntero al bloque de direccionamiento indirecto
+    paint_bitmap(disco, (int)pointer);   // lo libero 
+    fseek(disco, (int)pointer, SEEK_SET); //voy hacia el   
+    for (int i = 252; i < size; ++i){
+      fseek(disco, 4, SEEK_CUR);
+      fread(pointer, 1, 4, disco); //guardo el siguiente bloque a liberar en el bitmap
+      paint_bitmap(disco, (int)pointer);   // lo libero
+  }  
   fclose(disco);
   return 0;
 }
