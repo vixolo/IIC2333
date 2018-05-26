@@ -36,7 +36,7 @@ int cz_exists(char* filename){ //Search for the filename and tell if it's there
   return 0;
 }
 
-char *decimal_to_binary(int n){
+char * decimal_to_binary(int n){
 
   /* MÉTODO OBTENIDO DE https://www.programmingsimplified.com/c/source-code/\
   c-program-convert-decimal-to-binary */
@@ -70,6 +70,7 @@ int get_available_block_from_byte(char byte){
   char * binary = decimal_to_binary((int)(byte));
   for (int bit = 0; bit <8; bit++) {
     if (binary[bit] == '0'){
+      free(binary);
       return bit;
     }
   }
