@@ -1,6 +1,6 @@
 #ifndef T3_cz_API_H
 #define T3_cz_API_H
-
+#include <stdio.h>
 /* Method declarations */
 
 typedef struct czFILE {
@@ -9,6 +9,7 @@ typedef struct czFILE {
   char pointer[2]; //Pointer to index block of file which contains all info
 } czFILE;
 
+int paint_bitmap(FILE * disk, int block_num);
 int cz_exists(char* filename);
 char *decimal_to_binary(int n);
 int get_available_block_from_byte(char byte);

@@ -8,6 +8,45 @@
 #include "cz_API.h"
 
 
+int paint_bitmap(FILE * disk, int block_num){
+
+  printf("block num: %i\n", block_num);
+  int byte_position = block_num/8;
+  int offset = block_num%8;
+  printf("byte position: %i\n", byte_position);
+  printf("byte position: %i\n", offset);
+
+
+  int * eight_blocks = (int*)malloc(9);
+  fseek(disk, 1024+byte_position, SEEK_SET);
+  fread(eight_blocks, 1, 1, disk);
+  char * bits;
+  bits = decimal_to_binary(eight_blocks[0]);
+  printf("initial bits: %s\n", bits);
+  char digit_char = bits[offset];
+  int digit = atoi(&digit_char);
+  int new_digit = 1-digit;
+  if (new_digit){
+    bits[offset] = '1';
+  } else {
+    bits[offset] = '0';
+  }
+
+
+  printf("New bits %s\n", bits);
+  int new_byte;
+
+  for (int i = 7; i >= 0; i--) {
+    if (bits[i] == '1'){
+      printf("sumando %i\n", (int)pow(2, 7-i));
+      new_byte+= (int)pow(2,7-i);
+    }
+  }
+  printf("New byte: %x\n", new_byte);
+  fseek(disk, 1024+byte_position, SEEK_SET);
+  fwrite(&new_byte, 4, 1, disk);
+  return 0;
+}
 
 int cz_exists(char* filename){ //Search for the filename and tell if it's there
   FILE * disco = fopen("simdiskfilled.bin", "r");
@@ -229,7 +268,7 @@ int cz_rm(char* filename){
   }
   FILE * disco = fopen("simdiskfilled.bin", "r+");
   int max_file_storage = 64;
-  char pointer[4];
+  int pointer;
   for (int i = 0; i < max_file_storage; i++) {
     fseek(disco, 16*i, SEEK_SET);
     char validity[1];
@@ -243,32 +282,36 @@ int cz_rm(char* filename){
           validity[0] = '\x00';
           fwrite(validity, 1, 1, disco);
           fseek(disco, 16*i+12, SEEK_SET);
-          fread(pointer, 1, 4, disco);
+          fread(&pointer, 4, 1, disco);
           break;
       }
     }
   }
-  fseek(disco, (int)pointer, SEEK_SET); // Nos paramos en el bloque indice
-  paint_bitmap(disco, (int)pointer); //libero el bloque indice
-  char size[4];
-  fseek(disco, (int)pointer, SEEK_SET);
-  fread(size, 1, 4, disco);
-  fseek(disco, (int)pointer+8, SEEK_SET);
-  for (int i = 0; (i < 253 && i < size); ++i){
+
+  fseek(disco, pointer, SEEK_SET); // Nos paramos en el bloque indice
+  paint_bitmap(disco, pointer); //libero el bloque indice
+  int size;
+  fseek(disco, pointer, SEEK_SET);
+  fread(&size, 4, 1, disco);
+  fseek(disco, pointer+8, SEEK_SET);
+  for (int i = 0; (i < 252 && i < (size/1024)+1); i++){
     fseek(disco, 4, SEEK_CUR);
-    fread(pointer, 1, 4, disco); //guardo el siguiente bloque a liberar en el bitmap
-    paint_bitmap(disco, (int)pointer);   // lo libero
-    } 
-  if (size > 252){
+    fread(&pointer, 1, 4, disco); //guardo el siguiente bloque a liberar en el bitmap
+    printf("lugar a borrar: %i\n", pointer);
+    paint_bitmap(disco, pointer);   // lo libero
+    }
+  if (size/1024 > 252){
     fseek(disco, 4, SEEK_CUR);
-    fread(pointer, 1, 4, disco); //guardo el puntero al bloque de direccionamiento indirecto
-    paint_bitmap(disco, (int)pointer);   // lo libero 
-    fseek(disco, (int)pointer, SEEK_SET); //voy hacia el   
+    fread(&pointer, 1, 4, disco); //guardo el puntero al bloque de direccionamiento indirecto
+    paint_bitmap(disco, pointer);   // lo libero
+    fseek(disco, pointer, SEEK_SET); //voy hacia el
     for (int i = 252; i < size; ++i){
       fseek(disco, 4, SEEK_CUR);
-      fread(pointer, 1, 4, disco); //guardo el siguiente bloque a liberar en el bitmap
-      paint_bitmap(disco, (int)pointer);   // lo libero
-  }  
+      fread(&pointer, 1, 4, disco); //guardo el siguiente bloque a liberar en el bitmap
+      printf("lugar a borrar 2:%i\n", pointer);
+      paint_bitmap(disco, pointer);   // lo libero
+      }
+    }
   fclose(disco);
   return 0;
 }
@@ -295,7 +338,7 @@ int cz_cp(char* orig, char *dest){
       fread(pointer, 1, 4, disco);
       if(!strcmp(name, orig)){
         fseek(disco, 0, pointer); //esta sintaxis no estoy seguro
-        fread(size, 1, 4, disco);
+        fread(&size, 4, 1, disco);
         fseek(disco, 16*i + 12, SEEK_SET);
         fread(data, 1, 1008, disco);
         fread(pointer, 1, 4, disco);
