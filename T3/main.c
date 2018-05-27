@@ -5,7 +5,7 @@
 
 
 int main(int argc, char const *argv[]) {
-  char nombre2[] = "aaaaa.gif";
+  char nombre2[] = "texto.txt";
   char nombre[] = "vixolo.mov";
   printf("%s\n", "estoy ejecutando");
   cz_ls();

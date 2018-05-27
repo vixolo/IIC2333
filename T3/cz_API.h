@@ -9,6 +9,8 @@ typedef struct czFILE {
   char pointer[2]; //Pointer to index block of file which contains all info
 } czFILE;
 
+int little_hex_to_int(char ch);
+int hex_to_int(char* hex);
 int paint_bitmap(FILE * disk, int block_num);
 int cz_exists(char* filename);
 char *decimal_to_binary(int n);

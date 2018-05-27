@@ -7,6 +7,38 @@
 #include <time.h>
 #include "cz_API.h"
 
+int little_hex_to_int(char ch){
+  if (ch <= 9){
+    return ch;
+  }
+  if (ch == '\xA'){
+    return 10;
+  }
+  if (ch == '\xB'){
+    return 11;
+  }
+  if (ch == '\xC'){
+    return 12;
+  }
+  if (ch == '\xD'){
+    return 13;
+  }
+  if (ch == '\xE'){
+    return 14;
+  }
+  if (ch == '\xF'){
+    return 15;
+  }
+};
+
+int hex_to_int(char* hex){
+  int ret = 0;
+  ret = ret + little_hex_to_int(hex[3]);
+  ret = ret + 256*little_hex_to_int(hex[2]);
+  ret = ret + 256*256*little_hex_to_int(hex[1]);
+  ret = ret + 256*256*256*little_hex_to_int(hex[0]);
+  return ret;
+};
 
 int paint_bitmap(FILE * disk, int block_num){
 
@@ -268,7 +300,7 @@ int cz_rm(char* filename){
   }
   FILE * disco = fopen("simdiskfilled.bin", "r+");
   int max_file_storage = 64;
-  int pointer;
+  char pointer[4];
   for (int i = 0; i < max_file_storage; i++) {
     fseek(disco, 16*i, SEEK_SET);
     char validity[1];
@@ -282,14 +314,14 @@ int cz_rm(char* filename){
           validity[0] = '\x00';
           fwrite(validity, 1, 1, disco);
           fseek(disco, 16*i+12, SEEK_SET);
-          fread(&pointer, 4, 1, disco);
+          fread(pointer, 4, 1, disco);
           break;
       }
     }
   }
-
-  fseek(disco, pointer, SEEK_SET); // Nos paramos en el bloque indice
-  paint_bitmap(disco, pointer); //libero el bloque indice
+  fseek(disco, hex_to_int(pointer), SEEK_SET); // Nos paramos en el bloque indice
+  paint_bitmap(disco, hex_to_int(pointer)); //libero el bloque indice
+  /*
   int size;
   fseek(disco, pointer, SEEK_SET);
   fread(&size, 4, 1, disco);
@@ -300,7 +332,7 @@ int cz_rm(char* filename){
     printf("lugar a borrar: %i\n", pointer);
     paint_bitmap(disco, pointer);   // lo libero
     }
-  if (size/1024 > 252){
+  if (0){//size/1024 > 252){
     fseek(disco, 4, SEEK_CUR);
     fread(&pointer, 1, 4, disco); //guardo el puntero al bloque de direccionamiento indirecto
     paint_bitmap(disco, pointer);   // lo libero
@@ -312,6 +344,7 @@ int cz_rm(char* filename){
       paint_bitmap(disco, pointer);   // lo libero
       }
     }
+    */
   fclose(disco);
   return 0;
 }
