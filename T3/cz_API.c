@@ -57,14 +57,7 @@ int paint_bitmap(FILE * disk, int block_num){
   } else {
     bits[offset] = '0';
   }
-<<<<<<< HEAD
-
-
-  printf("New bits %s\n", bits);
   char new_byte;
-=======
-  char new_byte = malloc(1);
->>>>>>> a474f336fb579dc4dfb153aa724bec0fe9a7c475
   new_byte = '\x00';
   for (int i = 7; i >= 1; i--) {
     if (bits[i] == '1'){
