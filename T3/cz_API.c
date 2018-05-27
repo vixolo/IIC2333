@@ -42,19 +42,13 @@ int hex_to_int(char* hex){
 
 int paint_bitmap(FILE * disk, int block_num){
 
-  printf("block num: %i\n", block_num);
   int byte_position = block_num/8;
   int offset = block_num%8;
-  printf("byte position: %i\n", byte_position);
-  printf("byte position: %i\n", offset);
-
-
   int * eight_blocks = (int*)malloc(9);
   fseek(disk, 1024+byte_position, SEEK_SET);
   fread(eight_blocks, 1, 1, disk);
   char * bits;
   bits = decimal_to_binary(eight_blocks[0]);
-  printf("initial bits: %s\n", bits);
   char digit_char = bits[offset];
   int digit = atoi(&digit_char);
   int new_digit = 1-digit;
@@ -63,24 +57,16 @@ int paint_bitmap(FILE * disk, int block_num){
   } else {
     bits[offset] = '0';
   }
-
-
-  printf("New bits %s\n", bits);
-  char new_byte = (char)malloc(1);
+  char new_byte = malloc(1);
   new_byte = '\x00';
-
   for (int i = 7; i >= 1; i--) {
     if (bits[i] == '1'){
-      printf("sumando %i\n", (int)pow(2, 7-i));
-      printf("char de esta mierda: %x\n", (char)pow(2,7-i));
       new_byte += (char)pow(2,7-i);
     }
   }
-  printf("New byte sin 128: %x\n", new_byte);
   if (bits[0] == '1'){
     new_byte += '\x80';
   }
-  printf("New byte: %x\n", new_byte);
   fseek(disk, 1024+byte_position, SEEK_SET);
   fwrite(&new_byte, 1, 1, disk);
   return 0;
@@ -337,30 +323,23 @@ int cz_rm(char* filename){
   }
   fseek(disco, hex_to_int(pointer), SEEK_SET); // Nos paramos en el bloque indice
   paint_bitmap(disco, hex_to_int(pointer)); //libero el bloque indice
-  /*
-  int size;
-  fseek(disco, pointer, SEEK_SET);
-  fread(&size, 4, 1, disco);
-  fseek(disco, pointer+8, SEEK_SET);
-  for (int i = 0; (i < 252 && i < (size/1024)+1); i++){
-    fseek(disco, 4, SEEK_CUR);
-    fread(&pointer, 1, 4, disco); //guardo el siguiente bloque a liberar en el bitmap
-    printf("lugar a borrar: %i\n", pointer);
-    paint_bitmap(disco, pointer);   // lo libero
+  char size[4];
+  fseek(disco, hex_to_int(pointer)*1024, SEEK_SET);
+  fread(size, 1, 4, disco);
+  fseek(disco, hex_to_int(pointer)*1024+12, SEEK_SET);
+  for (int i = 0; (i < 252 && i < (hex_to_int(size)/1024)+1); i++){
+    fread(pointer, 1, 4, disco); //guardo el siguiente bloque a liberar en el bitmap
+    paint_bitmap(disco, hex_to_int(pointer));   // lo libero
     }
-  if (0){//size/1024 > 252){
-    fseek(disco, 4, SEEK_CUR);
-    fread(&pointer, 1, 4, disco); //guardo el puntero al bloque de direccionamiento indirecto
-    paint_bitmap(disco, pointer);   // lo libero
-    fseek(disco, pointer, SEEK_SET); //voy hacia el
-    for (int i = 252; i < size; ++i){
-      fseek(disco, 4, SEEK_CUR);
-      fread(&pointer, 1, 4, disco); //guardo el siguiente bloque a liberar en el bitmap
-      printf("lugar a borrar 2:%i\n", pointer);
-      paint_bitmap(disco, pointer);   // lo libero
+  if (hex_to_int(size)/1024 > 252){
+    fread(pointer, 1, 4, disco); //guardo el puntero al bloque de direccionamiento indirecto
+    paint_bitmap(disco, hex_to_int(pointer));   // lo libero
+    fseek(disco, hex_to_int(pointer)*1024, SEEK_SET); //voy hacia el
+    for (int i = 252; i < hex_to_int(size)/1024; ++i){
+      fread(pointer, 1, 4, disco); //guardo el siguiente bloque a liberar en el bitmap
+      paint_bitmap(disco, hex_to_int(pointer));   // lo libero
       }
     }
-    */
   fclose(disco);
   return 0;
 }
