@@ -63,9 +63,6 @@ int paint_bitmap(FILE * disk, int block_num){
   } else {
     bits[offset] = '0';
   }
-
-
-  printf("New bits %s\n", bits);
   char new_byte;
   new_byte = '\x00';
 
