@@ -66,7 +66,7 @@ int paint_bitmap(FILE * disk, int block_num){
 
 
   printf("New bits %s\n", bits);
-  char new_byte = (char)malloc(1);
+  char new_byte;
   new_byte = '\x00';
 
   for (int i = 7; i >= 1; i--) {

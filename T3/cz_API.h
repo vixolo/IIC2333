@@ -1,6 +1,8 @@
 #ifndef T3_cz_API_H
 #define T3_cz_API_H
 #include <stdio.h>
+
+extern char * disk_name;
 /* Method declarations */
 
 typedef struct czFILE {
