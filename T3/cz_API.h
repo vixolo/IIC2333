@@ -4,9 +4,9 @@
 /* Method declarations */
 
 typedef struct czFILE {
-  char modo; // 'r' or 'w'
-  char* name; //11 characters for the name. 10 letters plus "\0"
-  char pointer[2]; //Pointer to index block of file which contains all info
+  char mode; // 'r' or 'w'
+  char name[11]; //11 characters for the name. 10 letters plus "\0"
+  int pointer; //Pointer to index block of file which contains all info
 } czFILE;
 
 int paint_bitmap(FILE * disk, int block_num);

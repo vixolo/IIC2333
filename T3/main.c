@@ -5,12 +5,10 @@
 
 
 int main(int argc, char const *argv[]) {
-  char nombre2[] = "aaaaa.gif";
-  char nombre[] = "vixolo.mov";
-  printf("%s\n", "estoy ejecutando");
-  cz_ls();
-  //printf("%i\n", cz_mv(nombre, nombre2));
-  cz_rm(nombre2);
-  //cz_cp(nombre, nombre2);
+  FILE * file = fopen("simdiskfilled.bin", "r+");
+  paint_bitmap(file, 368);
+  // printf("%s\n", file->name);
+  // printf("%c\n", file->mode);
+  // printf("%i\n", file->pointer);
   return 0;
 }

@@ -34,17 +34,23 @@ int paint_bitmap(FILE * disk, int block_num){
 
 
   printf("New bits %s\n", bits);
-  int new_byte;
+  char new_byte = (char)malloc(1);
+  new_byte = '\x00';
 
-  for (int i = 7; i >= 0; i--) {
+  for (int i = 7; i >= 1; i--) {
     if (bits[i] == '1'){
       printf("sumando %i\n", (int)pow(2, 7-i));
-      new_byte+= (int)pow(2,7-i);
+      printf("char de esta mierda: %x\n", (char)pow(2,7-i));
+      new_byte += (char)pow(2,7-i);
     }
+  }
+  printf("New byte sin 128: %x\n", new_byte);
+  if (bits[0] == '1'){
+    new_byte += '\x80';
   }
   printf("New byte: %x\n", new_byte);
   fseek(disk, 1024+byte_position, SEEK_SET);
-  fwrite(&new_byte, 4, 1, disk);
+  fwrite(&new_byte, 1, 1, disk);
   return 0;
 }
 
@@ -71,6 +77,7 @@ int cz_exists(char* filename){ //Search for the filename and tell if it's there
       check the directory block of disk \"%s\" \n", i, "simdiskfilled.bin");
     }
   }
+  printf("El archivo no existe%s\n", "");
   fclose(disco);
   return 0;
 }
@@ -146,45 +153,54 @@ int get_next_dir_number(){
 
 czFILE* cz_open(char* filename, char mode){
 
-  czFILE * open_file;
+  czFILE * open_file = (czFILE *)malloc(sizeof(czFILE));
   strcpy(open_file->name, filename);
-  printf("%lu\n", sizeof(char*));
-  sleep(4);
-  //open_file->modo = mode;
-  /*
+  open_file->mode = mode;
   if(mode=='r'){
     printf("%s\n", "modo lectura");
     if(!cz_exists(filename)){
       printf("%s doesn't exist. Can't read what's not there bruh.\n", filename);
-      sleep(10);
       return NULL;
     } else {
+      printf("%s\n", "El archivo existe");
       FILE * disco = fopen("simdiskfilled.bin", "r");
       int max_file_storage = 64;
       int index = 0;
       for (int i = 0; i < max_file_storage; i++) {
         fseek(disco, 16*i, SEEK_SET);
-        char * validity;
-        fread(validity, 1, 1, disco);
-        if(*validity=='\x00'){
-        continue;
-        }
-        else if(*validity=='\x01'){
-          char * name;
+        char validity;
+        fread(&validity, 1, 1, disco);
+        if(validity=='\x00'){
+          continue;
+        }else if(validity=='\x01'){
+          printf("Se encuentra entrada válida %s\n", "");
+          char name[11];
           fread(name, 1, 11, disco);
+          printf("Nombre leído %s\n", name);
           if(!strcmp(name, filename)){
+            printf("Se encuentra archivo %s\n", name);
+            printf("índice encontrado: %i\n", i);
             index = i;
             break;
           }
         }
       }
-      char * ptr;
+      int ptr1;
+      int ptr2;
+
+      printf("Indice busqueda: %i\n", index);
+      fseek(disco, 16*index+15, SEEK_SET);
+      fread(&ptr1, 1, 1, disco);
+      printf("ultimo byte: %i\n", ptr1);
       fseek(disco, 16*index+14, SEEK_SET);
-      fread(ptr, 1, 2, disco);
+      fread(&ptr2, 1, 1, disco);
+      printf("penultimo byte: %i\n", ptr2);
+
+      // open_file->pointer = ptr;
       fclose(disco);
-      strcpy(open_file->pointer, ptr);
+
     }
-  */
+  }
   /*
   } else if (mode == 'w'){
     if (cz_exists(filename)){
