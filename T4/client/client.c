@@ -120,6 +120,22 @@ void recibir_mensaje(int server, char * buffer, char * idaux, int bytes){
     printf("Tu oponente se llama %s\n", traducir(buffer, getsize(buffer)));
     return;
   }
+  else if(!strcmp(idaux, "00000110\0")){
+    printf("initial pod: %s\n", traducir(buffer, getsize(buffer)));
+    return;
+  }
+  else if(!strcmp(idaux, "00000111\0")){
+    printf(" %s\n", "Game started!");
+    return;
+  }
+  else if(!strcmp(idaux, "00001000\0")){
+    printf(" %s\n", "Round started!");
+    return;
+  }
+  else if(!strcmp(idaux, "00001001\0")){
+    printf(" %s\n", "Apuestas sobre la mesa ... ");
+    return;
+  }
   printf("este es tu idaux %s\n", idaux);
   error_not_implemented(server);
   return;
@@ -147,8 +163,13 @@ int main(int argc, char const *argv[]){
   recibir_mensaje(clientSocket, buffer, idaux, 17);
   recibir_mensaje(clientSocket, buffer, idaux, 17);
 
-  recibir_mensaje(clientSocket, buffer, idaux, 1024);
-  sleep(20);
+  recibir_mensaje(clientSocket, buffer, idaux, 1024);//nombre contrincant
+  recibir_mensaje(clientSocket, buffer, idaux, 1024); // init. pod
+  recibir_mensaje(clientSocket, buffer, idaux, 1024); // game start
+  recibir_mensaje(clientSocket, buffer, idaux, 1024); // round start
+  recibir_mensaje(clientSocket, buffer, idaux, 1024); // bets done
+
+  sleep(2);
   free(buffer);
   close(clientSocket);
   return 0;

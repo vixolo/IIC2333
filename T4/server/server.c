@@ -71,6 +71,26 @@ void opponent_found(int client, char * enemy_data){
   return;
 }
 
+void initial_pot(int client){
+  send(client, "000001100000010000110001001100000011000000110000\0", 17+4*8, 0);
+  return;
+}
+
+void game_start(int client){
+  send(client, "0000011100000000\0", 17, 0);
+  return;
+}
+
+void start_round(int client){
+  send(client, "000010000000010000110001001100000011000000110000\0", 17+4*8, 0);
+  return;
+}
+
+void initial_bet(int client){
+  send(client, "000010010000000100001010\0", 17+8, 0);
+  return;
+}
+
 void recibir_mensaje(int client, char * buffer, char * idaux, int bytes){
   recv(client, buffer, bytes, 0);
   strncpy(idaux, buffer, 8);
@@ -129,6 +149,19 @@ int main(int argc, char const *argv[]){
 
   opponent_found(cliente_1, data_j2);
   opponent_found(cliente_2, data_j1);
+  sleep(1);
+  initial_pot(cliente_1);
+  initial_pot(cliente_2);
+  sleep(1);
+  game_start(cliente_1);
+  game_start(cliente_2);
+  sleep(1);
+  start_round(cliente_1);
+  start_round(cliente_2);
+  sleep(1);
+  initial_bet(cliente_1);
+  initial_bet(cliente_2);
+
   sleep(5);
 
   free(buffer);
