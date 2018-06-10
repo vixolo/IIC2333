@@ -60,6 +60,17 @@ char * traducir(char* buffer, int n){
   return aux;
 }
 
+void opponent_found(int client, char * enemy_data){
+  char * buff = malloc(strlen(enemy_data));
+  strncpy(buff, "00000101", 8);
+  for (int i = 8; i < strlen(enemy_data); i++) {
+    buff[i] = enemy_data[i];
+  }
+  send(client, buff, strlen(enemy_data), 0);
+  free(buff);
+  return;
+}
+
 void recibir_mensaje(int client, char * buffer, char * idaux, int bytes){
   recv(client, buffer, bytes, 0);
   strncpy(idaux, buffer, 8);
@@ -69,7 +80,7 @@ void recibir_mensaje(int client, char * buffer, char * idaux, int bytes){
     return;
   }
   else if(!strcmp(idaux, "00000100\0")){
-    printf("El jugador 1 se llama %s\n", traducir(buffer, getsize(buffer)));
+    printf("El jugador se llama %s\n", traducir(buffer, getsize(buffer)));
     return;
   }
   error_not_implemented(client);
@@ -95,18 +106,30 @@ int main(int argc, char const *argv[]){
   memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
   bind(welcomeSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
   addr_size = sizeof serverStorage;
-  
+
   while(listen(welcomeSocket,2));
   cliente_1 = accept(welcomeSocket, (struct sockaddr *) &serverStorage, &addr_size);
   recibir_mensaje(cliente_1, buffer, idaux, 17);
   ask_nickname(cliente_1);
   recibir_mensaje(cliente_1, buffer, idaux, 1024);
+  char data_j1[1024];
+  strcpy(data_j1, buffer);
+  char nombre_j1[20];
+  strcpy(nombre_j1, traducir(buffer, getsize(buffer)));
 
   while(listen(welcomeSocket,2));
   cliente_2 = accept(welcomeSocket, (struct sockaddr *) &serverStorage, &addr_size);
   recibir_mensaje(cliente_2, buffer, idaux, 17);
   ask_nickname(cliente_2);
   recibir_mensaje(cliente_2, buffer, idaux, 1024);
+  char data_j2[1024];
+  strcpy(data_j2, buffer);
+  char nombre_j2[20];
+  strcpy(nombre_j2, traducir(buffer, getsize(buffer)));
+
+  opponent_found(cliente_1, data_j2);
+  opponent_found(cliente_2, data_j1);
+  sleep(5);
 
   free(buffer);
   free(idaux);

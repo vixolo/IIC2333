@@ -64,10 +64,45 @@ void return_nickname(int server){
   strcat(aux, aux2);
   strcat(aux, stringToBinary(nombrecito));
   strcat(aux, "\0");
-  printf("aux vale %s\n", aux);
+
   //printf("Te llamas %s de largo %d ??? \n", nombrecito, strlen(nombrecito));
   send(server, aux,17+strlen(nombrecito)*8, 0);
   return;
+}
+
+int getsize(char * data){
+  int pot = 1;
+  int sum = 0;
+  for (int i = 15; i >= 8; i--) {
+    if(data[i] == '1'){
+      sum = sum + pot;
+    }
+    pot = pot * 2;
+  }
+  return sum;
+}
+
+int toint(char * data, int offset){
+  int pot = 1;
+  int sum = 0;
+  for (int i = 15+offset*8; i >= 8+offset*8; i--) {
+    if(data[i] == '1'){
+      sum = sum + pot;
+    }
+    pot = pot * 2;
+  }
+  return sum;
+}
+
+char * traducir(char* buffer, int n){
+  char * aux = malloc(n+1);
+  char * foo = malloc(1);
+  for (int i = 1; i <= n; i++) {
+    foo = toint(buffer, i);
+    aux[i-1] = foo;
+  }
+  aux[n] = '\0';
+  return aux;
 }
 
 void recibir_mensaje(int server, char * buffer, char * idaux, int bytes){
@@ -81,6 +116,11 @@ void recibir_mensaje(int server, char * buffer, char * idaux, int bytes){
     return_nickname(server);
     return;
   }
+  else if(!strcmp(idaux, "00000101\0")){
+    printf("Tu oponente se llama %s\n", traducir(buffer, getsize(buffer)));
+    return;
+  }
+  printf("este es tu idaux %s\n", idaux);
   error_not_implemented(server);
   return;
 }
@@ -106,9 +146,10 @@ int main(int argc, char const *argv[]){
   start_connection(clientSocket, buffer, 17);
   recibir_mensaje(clientSocket, buffer, idaux, 17);
   recibir_mensaje(clientSocket, buffer, idaux, 17);
+
+  recibir_mensaje(clientSocket, buffer, idaux, 1024);
+  sleep(20);
   free(buffer);
   close(clientSocket);
-  sleep(20);
-
   return 0;
 }
